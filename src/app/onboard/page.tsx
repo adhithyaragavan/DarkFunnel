@@ -120,7 +120,7 @@ export default function OnboardPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#030303] w-full relative overflow-hidden select-none">
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-8 bg-[#030303] w-full relative overflow-y-auto select-none">
       {/* Mesh grid & glowing background orbs */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f29370a_1px,transparent_1px),linear-gradient(to_bottom,#1f29370a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-primary/10 rounded-full blur-[110px] pointer-events-none" />
@@ -387,7 +387,7 @@ export default function OnboardPage() {
               <Button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs gap-2 active:scale-95 duration-200 transition-all shadow-[0_0_15px_rgba(99,102,241,0.4)] animate-pulse px-6"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs gap-2 active:scale-95 duration-200 transition-all shadow-[0_0_15px_rgba(99,102,241,0.4)] px-6"
               >
                 {loading ? (
                   <>
