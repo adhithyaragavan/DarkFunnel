@@ -5,7 +5,7 @@ import { IntentBadge, SourceIcon } from "@/components/SignalCard";
 import { Signal } from "@/types";
 import { MOCK_SIGNALS } from "@/lib/mock-data";
 import { formatDistanceToNow } from "date-fns";
-import { Plus, User, Building, MessageSquare, Clipboard, ArrowRight } from "lucide-react";
+import { Plus, User, Building, MessageSquare, Clipboard, ArrowRight, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -167,6 +167,37 @@ export function SavedClient({ initialSignals }: { initialSignals: Signal[] }) {
     }
   };
 
+  const handleUnsave = async (id: string) => {
+    if (isDemo || id.startsWith("sig-")) {
+      const localStatuses = JSON.parse(localStorage.getItem("darkfunnel_mock_statuses") || "{}");
+      localStatuses[id] = "new";
+      localStorage.setItem("darkfunnel_mock_statuses", JSON.stringify(localStatuses));
+
+      setSignals((curr) => curr.filter((s) => s.id !== id));
+      window.dispatchEvent(new CustomEvent("scan-status", { detail: {} }));
+      toast.success("Lead removed from pipeline");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/signal/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "new" }),
+      });
+      if (res.ok) {
+        setSignals((curr) => curr.filter((s) => s.id !== id));
+        window.dispatchEvent(new CustomEvent("scan-status", { detail: {} }));
+        toast.success("Lead removed from pipeline");
+      } else {
+        toast.error("Failed to remove lead from pipeline");
+      }
+    } catch (err) {
+      console.error("Failed to unsave lead:", err);
+      toast.error("Failed to remove lead from pipeline");
+    }
+  };
+
   const totalLeads = signals.length;
   const convertedCount = signals.filter((s) => s.status === "converted").length;
   const conversionRate = totalLeads > 0 ? Math.round((convertedCount / totalLeads) * 100) : 0;
@@ -213,6 +244,7 @@ export function SavedClient({ initialSignals }: { initialSignals: Signal[] }) {
                     signal={signal}
                     onDragStart={() => handleDragStart(signal.id)}
                     onNotesSave={(notes) => handleNotesUpdate(signal.id, notes)}
+                    onUnsave={() => handleUnsave(signal.id)}
                   />
                 ))}
 
@@ -288,10 +320,12 @@ function KanbanCard({
   signal,
   onDragStart,
   onNotesSave,
+  onUnsave,
 }: {
   signal: Signal;
   onDragStart: () => void;
   onNotesSave: (notes: string) => void;
+  onUnsave: () => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [notesText, setNotesText] = useState(signal.notes || "");
@@ -360,15 +394,30 @@ function KanbanCard({
         )}
       </div>
       
-      {/* Open link indicator */}
-      <a 
-        href={signal.source_url} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 bg-white/5 border border-border rounded hover:bg-white/10"
-      >
-        <ArrowRight size={10} className="text-muted-foreground" />
-      </a>
+      {/* Absolute hover actions */}
+      <div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <a 
+          href={signal.source_url} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="p-1 bg-white/5 border border-border rounded hover:bg-white/10 hover:text-white"
+          title="Open Origin Link"
+        >
+          <ArrowRight size={10} className="text-muted-foreground" />
+        </a>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (confirm("Remove this lead from your pipeline?")) {
+              onUnsave();
+            }
+          }}
+          className="p-1 bg-white/5 border border-border rounded hover:bg-red-500/20 hover:border-red-500/40 hover:text-red-400 text-muted-foreground transition-all"
+          title="Remove from Pipeline (Unsave)"
+        >
+          <X size={10} />
+        </button>
+      </div>
     </div>
   );
 }

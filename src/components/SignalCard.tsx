@@ -76,12 +76,14 @@ export function SignalCard({
   onDismiss,
   id,
   onUpdate,
+  onUnsave,
 }: {
   signal: Signal;
   onSave: () => void;
   onDismiss: () => void;
   id?: string;
   onUpdate?: (updated: Signal) => void;
+  onUnsave?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [isRescanning, setIsRescanning] = useState(false);
@@ -444,9 +446,16 @@ Source: ${signal.source_url}`;
           )}
 
           {signal.status === "saved" && (
-            <Badge variant="secondary" className="bg-[#6366f1]/20 text-[#818cf8] border border-[#6366f1]/20 text-xs py-1 h-8">
-              Saved Lead
-            </Badge>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onUnsave}
+              className="h-8 text-xs font-semibold border-indigo-500/30 text-indigo-400 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-all duration-200 group"
+            >
+              <Bookmark size={13} className="mr-1.5 fill-indigo-400 group-hover:fill-red-400" />
+              <span className="group-hover:hidden">Saved</span>
+              <span className="hidden group-hover:inline">Unsave</span>
+            </Button>
           )}
 
           <Button

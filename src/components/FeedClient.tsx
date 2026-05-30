@@ -340,6 +340,41 @@ export function FeedClient({
     }
   };
 
+  const handleUnsave = async (id: string) => {
+    if (isDemo || id.startsWith("sig-")) {
+      const localStatuses = JSON.parse(localStorage.getItem("darkfunnel_mock_statuses") || "{}");
+      localStatuses[id] = "new";
+      localStorage.setItem("darkfunnel_mock_statuses", JSON.stringify(localStatuses));
+
+      setSignals((curr) =>
+        curr.map((s) => (s.id === id ? { ...s, status: "new" } : s))
+      );
+      window.dispatchEvent(new CustomEvent("scan-status", { detail: {} }));
+      toast.success("Signal unsaved");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/signal/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "new" }),
+      });
+      if (res.ok) {
+        setSignals((curr) =>
+          curr.map((s) => (s.id === id ? { ...s, status: "new" } : s))
+        );
+        window.dispatchEvent(new CustomEvent("scan-status", { detail: {} }));
+        toast.success("Signal unsaved");
+      } else {
+        toast.error("Failed to unsave signal");
+      }
+    } catch (err) {
+      console.error("Failed to unsave signal:", err);
+      toast.error("Failed to unsave signal");
+    }
+  };
+
   const handleDismiss = async (id: string) => {
     if (isDemo || id.startsWith("sig-")) {
       const localStatuses = JSON.parse(localStorage.getItem("darkfunnel_mock_statuses") || "{}");
@@ -611,6 +646,7 @@ export function FeedClient({
             id={index === 0 ? "tour-step-3" : undefined}
             signal={signal}
             onSave={() => handleSave(signal.id)}
+            onUnsave={() => handleUnsave(signal.id)}
             onDismiss={() => handleDismiss(signal.id)}
             onUpdate={(updated) => {
               setSignals(curr => curr.map(s => s.id === updated.id ? updated : s));
