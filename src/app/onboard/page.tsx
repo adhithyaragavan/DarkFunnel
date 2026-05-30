@@ -172,7 +172,7 @@ export default function OnboardPage() {
             {/* Smooth slide container */}
             <div
               className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${(step - 1) * 100}%)`, width: "300%" }}
+              style={{ transform: `translateX(-${(step - 1) * 33.3333}%)`, width: "300%" }}
             >
               {/* Step 1 */}
               <div className="w-[33.333%] shrink-0 p-6 flex flex-col justify-between min-h-[385px]">

@@ -34,20 +34,51 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data, error } = await supabaseAdmin
+    // Check if any workspace already exists to update it (ensures re-onboarding works correctly)
+    const { data: existing } = await supabaseAdmin
       .from("workspaces")
-      .insert({
-        user_email,
-        product_description,
-        icp_description,
-        competitors: competitors ?? [],
-        keywords: keywords ?? [],
-        slack_webhook_url: slack_webhook_url ?? null,
-        email_digest_enabled: email_digest_enabled ?? false,
-        email_digest_time: email_digest_time ?? "09:00",
-      })
-      .select()
-      .single();
+      .select("id")
+      .limit(1);
+
+    let data;
+    let error;
+
+    if (existing && existing.length > 0) {
+      const res = await supabaseAdmin
+        .from("workspaces")
+        .update({
+          user_email,
+          product_description,
+          icp_description,
+          competitors: competitors ?? [],
+          keywords: keywords ?? [],
+          slack_webhook_url: slack_webhook_url ?? null,
+          email_digest_enabled: email_digest_enabled ?? false,
+          email_digest_time: email_digest_time ?? "09:00",
+        })
+        .eq("id", existing[0].id)
+        .select()
+        .single();
+      data = res.data;
+      error = res.error;
+    } else {
+      const res = await supabaseAdmin
+        .from("workspaces")
+        .insert({
+          user_email,
+          product_description,
+          icp_description,
+          competitors: competitors ?? [],
+          keywords: keywords ?? [],
+          slack_webhook_url: slack_webhook_url ?? null,
+          email_digest_enabled: email_digest_enabled ?? false,
+          email_digest_time: email_digest_time ?? "09:00",
+        })
+        .select()
+        .single();
+      data = res.data;
+      error = res.error;
+    }
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data, { status: 201 });
