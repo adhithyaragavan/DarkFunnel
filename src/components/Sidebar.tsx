@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { Home, Bookmark, BarChart2, Settings, Search, Loader2, Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -13,6 +13,7 @@ export function Sidebar() {
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [feedCount, setFeedCount] = useState<number | null>(null);
   const [savedCount, setSavedCount] = useState<number | null>(null);
   const [totalSignals, setTotalSignals] = useState<number>(0);
@@ -99,18 +100,39 @@ export function Sidebar() {
     };
   }, []);
 
+  const handleStopScan = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setScanning(false);
+      window.dispatchEvent(new CustomEvent("scan-status", { detail: { scanning: false } }));
+      toast.warning("Scan stopped by user");
+    }
+  };
+
   const triggerScan = async () => {
-    if (!workspaceId || scanning) return;
+    if (!workspaceId) return;
+
+    if (scanning) {
+      handleStopScan();
+      return;
+    }
+
     setScanning(true);
-    // Notify other components (like FeedUI) in real-time!
     window.dispatchEvent(new CustomEvent("scan-status", { detail: { scanning: true } }));
     toast.info("Scan running in background", { id: "bg-scan" });
     
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
-      const res = await fetch(`/api/scan/${workspaceId}`, { method: "POST" });
+      const res = await fetch(`/api/scan/${workspaceId}`, { 
+        method: "POST",
+        signal: controller.signal
+      });
       const data = await res.json();
       
-      // Notify scanning complete
+      abortControllerRef.current = null;
       window.dispatchEvent(new CustomEvent("scan-status", { detail: { scanning: false } }));
       
       if (data.error) {
@@ -121,7 +143,11 @@ export function Sidebar() {
           window.location.reload();
         }, 1000);
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        return;
+      }
+      abortControllerRef.current = null;
       window.dispatchEvent(new CustomEvent("scan-status", { detail: { scanning: false } }));
       toast.error("Scan failed — please try again");
     }
@@ -222,17 +248,21 @@ export function Sidebar() {
             <button
               id="tour-step-4"
               onClick={triggerScan}
-              disabled={scanning}
-              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/95 text-primary-foreground py-2 px-4 rounded-md font-medium text-xs transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:pointer-events-none h-10 select-none"
+              className={cn(
+                "w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md font-semibold text-xs transition-all shadow-sm active:scale-95 h-10 select-none cursor-pointer",
+                scanning 
+                  ? "bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400" 
+                  : "bg-primary hover:bg-primary/95 text-primary-foreground border-transparent"
+              )}
             >
               {scanning ? (
                 <>
-                  <Loader2 size={16} className="animate-spin" />
-                  Scanning...
+                  <Loader2 size={15} className="animate-spin text-red-400" />
+                  Stop Scan
                 </>
               ) : (
                 <>
-                  <Search size={16} />
+                  <Search size={15} />
                   Scan Now
                   <kbd className="text-[10px] font-bold text-primary-foreground/80 bg-white/10 px-1.5 py-0.5 rounded border border-white/10 shrink-0 ml-1 select-none pointer-events-none">S</kbd>
                 </>
