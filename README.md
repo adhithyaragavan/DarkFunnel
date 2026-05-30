@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌑 DarkFunnel — Find Buyers Before They Find You
 
-## Getting Started
+DarkFunnel monitors Reddit, Hacker News, G2, LinkedIn and the open web in real time — surfacing people who are actively researching a solution like yours before they ever visit your website.
 
-First, run the development server:
+Built for the Bright Data Web Data UNLOCKED Hackathon 2026.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## How It Works
+1. Describe your product and list your competitors.
+2. Gemini AI generates 20 optimized search queries.
+3. Bright Data SERP API scans the web every 6 hours.
+4. Gemini scores each result for buying intent (1-10).
+5. Hot signals appear in your feed with AI-recommended actions.
+6. Get daily email digests and instant Slack alerts.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
+- Next.js 14 + Tailwind CSS + shadcn/ui
+- Supabase (database)
+- Google Gemini 2.5 Pro (query generation + signal scoring)
+- Bright Data SERP API (web intelligence)
+- Jina Reader (content extraction)
+- Resend (email digests)
+- Vercel (hosting + cron jobs)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setup
+1. Clone the repo.
+2. Copy `.env.example` to `.env.local` and fill in your keys.
+3. Run the Supabase schema: `supabase/schema.sql`.
+4. Run `npm install`.
+5. Run `npm run dev`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `GOOGLE_API_KEY`
+- `BRIGHTDATA_API_KEY`
+- `BRIGHTDATA_SERP_ZONE`
+- `RESEND_API_KEY`
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+MIT
